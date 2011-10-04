@@ -1,0 +1,294 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coulisse</title>
+    <meta name="keywords" content="html,html5,canvas,javascript,coverflow,cover,flow" />
+    <meta name="description" content="coulisse is a demostration of a coverflow-like effect built with the HTML5 canvas element." />
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.6/themes/ui-darkness/jquery-ui.css"
+        type="text/css" />
+	<style type="text/css">
+﻿body
+{
+    background-color: #333333;
+    margin: 0;
+    padding: 0;
+}
+
+* a
+{
+    color: inherit;
+}
+
+.CoulisseDemo
+{
+    width: 100%;
+    height: 300px;
+    position: relative;
+    overflow: hidden;
+    background-color: Black;
+}
+
+.SliderDemo
+{
+    width: 80%;
+    margin: 10px 10%;
+    position: relative;
+}
+
+	</style>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.6/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="jquery.mousewheel.3.0.2/jquery.mousewheel.min.js"></script>
+        <script type="text/javascript" src="lds.coulisse.js"></script>
+        <script type="text/javascript" src="jQuery.ui.coulisseWrapper.js"></script>
+   </head>
+<body>
+    
+<article>    
+    <h1>
+        First things first
+    </h1>
+    <p>
+        All examples in this page make use of jQuery, jQuery-ui and the coulisse script.
+        Those references first need to be included in the head of the page before we can
+        use them. Also there are a couple of styles that you need in your page to view the
+        demos correctly.
+        <br />
+    </p>
+    <h1>
+        Basic example
+    </h1>
+    <div id="demo10">
+        <div id="coulisseDemo10" class="CoulisseDemo">
+        </div>
+        <script type="text/javascript">
+            jQuery(function ($) {
+                var myImages = [
+                    'Tiger.jpg'
+                    , 'Duck.jpg'
+                    , 'Moes.jpg'
+                    , 'Moos.jpg'
+                    , 'Lion.jpg'
+                    ];
+
+                $('#coulisseDemo10')
+                .coulisse({
+                    images: myImages
+                    , activeSize: 400
+                    , inactiveSize: 200
+                });
+
+            });  //jQuery
+        </script>
+    </div>
+    <h1>
+        Example with titles and picasa photo's
+    </h1>
+    <div id="demo20">
+        <h2 id="title20">
+        </h2>
+        <h3 id="subtitle20">
+        </h3>
+        <div id="coulisseDemo20" class="CoulisseDemo">
+        </div>
+        <script type="text/javascript">
+            jQuery(function ($) {
+                var $title = $('#title20');
+                var $subtitle = $('#subtitle20');
+
+                var setTitles = function (entry) {
+                    $title.text(entry.title.$t || 'no title');
+                    $subtitle.text(entry.gphoto$location.$t || 'no location');
+                };
+
+                $.ajax({
+                    url: 'https://picasaweb.google.com/data/feed/api/all'
+                    , dataType: 'jsonp'
+                    , data: {
+                        alt: 'json'
+                        , 'max-results': 20
+                    }
+                    , success: function (data) {
+                        setTitles(data.feed.entry[0]);
+
+                        $('#coulisseDemo20')
+                        .coulisse({
+                            index: 0
+                            , images: data.feed.entry
+                            , imageSrcGetter: ['content', 'src']
+                            , linkHrefGetter: ['link', 1, 'href']
+                            , activeSize: 350
+                            , inactiveSize: 200
+                            , indexChanging: function (e, arg) {
+                                var entry = data.feed.entry[arg.index];
+                                setTitles(entry);
+                            }
+                        });
+                    }
+                });
+
+            }); //jQuery
+        </script>
+    </div>
+    <h1>
+        Example with slider and flickr photo's
+    </h1>
+    <div id="demo30">
+        <div id="coulisseDemo30" class="CoulisseDemo">
+        </div>
+        <div id="sliderDemo30" class="SliderDemo">
+        </div>
+        <script type="text/javascript">
+            jQuery(function ($) {
+
+                var $coulisse = $('#coulisseDemo30');
+                var $slider = $('#sliderDemo30');
+
+                $coulisse
+                .coulisse({
+                    imageSrcGetter: ['media', 'm']
+                    , linkHrefGetter: 'link'
+                    , duration: 'fast'
+                    , activeSize: 350
+                    , inactiveSize: 250
+                    , area: 0.6
+                    , activateIndex: function (e, data) {
+                        $slider.slider('option', 'value', data.index);
+                    }
+                });
+
+                $slider
+                .slider({
+                    value: 0
+                    , min: 0
+                    , max: 0
+                    , step: 1
+                    , slide: function (event, ui) {
+                        $coulisse.coulisse('option', 'index', ui.value);
+                    }
+                });
+
+                $.ajax({
+                    url: 'http://api.flickr.com/services/feeds/photos_public.gne'
+                    , dataType: 'jsonp'
+                    , jsonp: 'jsoncallback'
+                    , data: {
+                        format: 'json'
+                        , 'per_page': 20
+                    }
+                    , success: function (data) {
+                        $coulisse.coulisse('option', 'images', data.items);
+                        $slider.slider('option', 'max', data.items.length - 1);
+                    }
+                });
+
+            }); //jQuery
+        </script>
+    </div>
+    <h1>
+        Basic example with titles, subtitles and mousewheel
+    </h1>
+    <p>
+        Requires '<a target="_blank" href="http://plugins.jquery.com/node/7146">jquery.mousewheel</a>'.
+    </p>
+    <div id="demo40">
+        <h2 id="title40">
+        </h2>
+        <h3 id="subtitle40">
+        </h3>
+        <div id="coulisseDemo40" class="CoulisseDemo">
+        </div>
+        <script type="text/javascript">
+            jQuery(function ($) {
+
+                /*
+                cache the title, subtitle and coulisse containers
+                */
+                var $title = $('#title40');
+                var $subtitle = $('#subtitle40');
+                var $coulisse = $('#coulisseDemo40');
+
+                /*
+                Declare an array of objects that contain the images, titles and subtitles
+                */
+                var myImages = [
+                    { src: 'Tiger.jpg', title: 'Tiger', subtitle: 'grrrr...' }
+                    , { src: 'Duck.jpg', title: 'Duck', subtitle: 'quack!' }
+                    , { src: 'Moes.jpg', title: 'Moes', subtitle: 'Miauw' }
+                    , { src: 'Moos.jpg', title: 'Moos', subtitle: 'Prrr' }
+                    , { src: 'Lion.jpg', title: 'Lion', subtitle: 'Yummy' }
+                    ];
+
+                /*
+                handy function that sets the content of the title and subtitle to the
+                specified entry in myImages
+                */
+                var setTitles = function (entryIndex) {
+                    var entry = myImages[entryIndex];
+                    $title.text(entry.title);
+                    $subtitle.text(entry.subtitle);
+                };
+
+                /*
+                pseudo random value for the initial image
+                */
+                var initialIndex = (new Date().valueOf()) % myImages.length;
+
+                /*
+                Initialize the coulisse container
+                */
+                $coulisse
+                .coulisse({
+                    images: myImages
+                    , imageSrcGetter: 'src' // the member of an entry in the images array thet holds the source url of the image
+                    , index: initialIndex // set the index to the (pseudo random) initial index
+                    , activeSize: 500
+                    , inactiveSize: 200
+                    , indexChanging: function (e, arg) {
+                        /*
+                        update the title and subtitle when the index is changing
+                        */
+                        setTitles(arg.index);
+                    }
+                })
+                ;
+
+
+                /*
+                some fancy code to handle the mousewheel event
+                */
+                var mousewheelTimeoutHandle = null;
+                var mousewheelIndex = null;
+                $coulisse
+                .bind('mousewheel', function (event, delta) {
+                    window.clearTimeout(mousewheelTimeoutHandle);
+                    if (mousewheelIndex === null) {
+                        mousewheelIndex = $coulisse.coulisse('option', 'index');
+                    }
+                    mousewheelIndex += delta;
+                    mousewheelIndex = Math.min(myImages.length - 1, mousewheelIndex);
+                    mousewheelIndex = Math.max(0, mousewheelIndex);
+                    $coulisse.coulisse('option', 'index', Math.round(mousewheelIndex));
+                    mousewheelTimeoutHandle = window.setTimeout(function () {
+                        mousewheelIndex = null;
+                    }, 300);
+                    return false;
+                })
+                ;
+
+                /*
+                set the titles to their initial values
+                */
+                setTitles(initialIndex);
+
+            });    //jQuery
+        </script>
+    </div>
+
+</article>
+
+</body>
+</html>
+
+
