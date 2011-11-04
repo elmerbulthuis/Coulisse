@@ -343,15 +343,36 @@ Dual licensed under the MIT and GPL licenses.
             this.drawPanel = function (state) {
                 var result = true;
 
+                
                 if (!loaded) {
                     return result;
                 }
 
                 var display = true;
+                /*
+                when the faceindex is an integer (0, 1, 3, -1, -5, etc...) the coulisse
+                there are two types of images. The image in the center is the active
+                image, the images on the left and right are the inactive images
+                When the faceIndex is a float and not an integer (0.5, 1.2, -0.1,
+                -5.99, 10.001, etc...) there is an extra type of image. This image is
+                between active and inactive and is the transforming image. There may
+                be up to two images of this type. They are the first image on the
+                left or right of the active (center) image.
+
+                panelIndex is always an integer, this is the position of the panel (image)
+                in the carrousel. realIndex, is not. when the coulisse is moving realIndex
+                is probably not an integer, but when it has stopped it is.
+                */
                 var faceIndex = panelIndex - realIndex;
                 var zIndex = state.panelCount - Math.abs(Math.round(faceIndex));
 
+                /*
+                if faceIndex is < 0 the image is right of the center.
+                */
                 if (faceIndex < 0) {
+                    /*
+                    if faceIndex is > -1 the image is transforming
+                    */
                     if (faceIndex > -1) {
                         var panel2 = panels[panelIndex + 1];
                         face.width = panel.inactivePanelWidth + panel.deltaWidth * state.realIndexModInv;
@@ -361,7 +382,14 @@ Dual licensed under the MIT and GPL licenses.
                         state.panelLeft -= (panel.inactivePanelWidth * area) * state.realIndexMod;
                         state.panelLeft -= (panel2.activePanelWidth - panel.activePanelWidth) / 2 * state.realIndexMod;
                     }
+                    /*
+                    if faceIndex is <= -1 the image is not transforming
+                    */
                     else {
+                        /*
+                        if the currentFaceIndex > -1, the image was transforming.
+                        The new image sould be untransformed
+                        */
                         if (currentFaceIndex > -1) {
                             face.width = panel.inactivePanelWidth;
                             face.height = panel.inactivePanelHeight;
@@ -370,12 +398,22 @@ Dual licensed under the MIT and GPL licenses.
                         display = state.panelLeft >= 0 - face.width;
                         state.panelLeft -= face.width * area;
                     }
+                    /*
+                    only update the position if the image is visible
+                    */
                     if (display) {
                         style.left = (state.panelLeft) + 'px';
                         style.right = '';
                     }
                 }
+                /*
+                when the image is not right of the center, it could be left of the
+                center. The image is left of the center when the faceIndex > 0
+                */
                 else if (faceIndex > 0) {
+                    /*
+                    Find out if the image is transforming.
+                    */
                     if (faceIndex < 1) {
                         var panel2 = panels[panelIndex - 1];
                         face.width = panel.inactivePanelWidth + panel.deltaWidth * state.realIndexMod;
@@ -385,7 +423,13 @@ Dual licensed under the MIT and GPL licenses.
                         state.panelRight -= (panel.inactivePanelWidth * area) * state.realIndexModInv;
                         state.panelRight -= (panel2.activePanelWidth - panel.activePanelWidth) / 2 * state.realIndexModInv;
                     }
+                    /*
+                    Image is not transforming
+                    */
                     else {
+                        /*
+                        was the previous image transforming?
+                        */
                         if (currentFaceIndex < 1) {
                             face.width = panel.inactivePanelWidth;
                             face.height = panel.inactivePanelHeight;
@@ -394,11 +438,20 @@ Dual licensed under the MIT and GPL licenses.
                         display = state.panelRight >= 0 - face.width;
                         state.panelRight -= face.width * area;
                     }
+                    /*
+                    if the image is not going to be displayed, don care about the
+                    and save some (a tiny bit of) CPU time!
+                    */
                     if (display) {
                         style.left = '';
                         style.right = (state.panelRight) + 'px';
                     }
                 }
+                /*
+                the image is not left of the center, and not right of the center.
+                So it has to be in the center! Just display the untransformed image,
+                only a little resized.
+                */
                 else {
                     face.width = panel.activePanelWidth;
                     face.height = panel.activePanelHeight;
@@ -411,18 +464,32 @@ Dual licensed under the MIT and GPL licenses.
                     }
                 }
 
+                /*
+                if the image is going to be displayed, display it! and set the
+                right position
+                */
                 if (display) {
                     style.zIndex = zIndex;
                     style.top = style.bottom = ((container.offsetHeight - face.height) / 2) + 'px';
                     style.display = 'block';
                 }
+                /*
+                if the imagfe should not be displayed, see if it it already hidden
+                and hide it.
+                */
                 else {
                     result = style.display != 'none';
                     style.display = 'none';
                 }
 
+                /*
+                the currentFaceIndex is not the faceIndex!
+                */
                 currentFaceIndex = faceIndex;
 
+                /*
+                this is false if the image was already hidden
+                */
                 return result;
             };
 
