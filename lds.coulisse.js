@@ -1,19 +1,17 @@
 /**
-@license LuvDaSun Coulisse - v0.8 - 2011-03-01
+@license LuvDaSun Coulisse - v0.8.1 - 2011-11-10
 http://coulisse.luvdasun.com/
 
 Copyright 2010-2011 "Elmer Bulthuis" <elmerbulthuis@gmail.com>
 Dual licensed under the MIT and GPL licenses.
 */
 
-(function () {
-    var global = this;
+/**
+@namespace
+*/
+if(typeof lds == 'undefined') lds = {};
 
-    /**
-    @namespace
-    */
-    this.lds = this.lds || {};
-
+(function (exports) {
     /**
     Execute the specified getter on the specified object-instance and return the result
     @inner
@@ -203,7 +201,7 @@ Dual licensed under the MIT and GPL licenses.
     @param {HTMLElement} container
     @param {Object} [options]
     */
-    this.lds.Coulisse = function (container, options) {
+    exports.Coulisse = function (container, options) {
         var coulisse = this;
 
         /**
@@ -289,7 +287,7 @@ Dual licensed under the MIT and GPL licenses.
             var currentFaceIndex = null;
             var image = document.createElement('img');
             var link = linkHref ? document.createElement('a') : null;
-            var canvas = ('HTMLCanvasElement' in global) ? document.createElement('canvas') : null;
+            var canvas = (typeof HTMLCanvasElement == 'undefined') ? null : document.createElement('canvas');
             var context = canvas ? canvas.getContext('2d') : null;
             var loaded = false;
             var face = canvas || image;
@@ -697,5 +695,5 @@ Dual licensed under the MIT and GPL licenses.
 
         delete options;
     };
-})();
+})(lds);
 
