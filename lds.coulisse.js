@@ -528,7 +528,7 @@ if(typeof lds == 'undefined') lds = {};
                 /*
                 this is false if the image was already hidden
                 */
-                return true;
+                return result;
             };
 
 
