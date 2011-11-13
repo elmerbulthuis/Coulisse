@@ -1,10 +1,20 @@
 /**
-@license LuvDaSun Coulisse - v0.8.1 - 2011-11-10
+@fileOverview LuvDaSun Coulisse
+@author <a href="mailto:elmerbulthuis@gmail.com">Elmer Bulthuis</a>
+@version 0.8.2
+@license LuvDaSun Coulisse - v0.8.2 - 2011-11-12
+
 http://coulisse.luvdasun.com/
 
 Copyright 2010-2011 "Elmer Bulthuis" <elmerbulthuis@gmail.com>
 Dual licensed under the MIT and GPL licenses.
+
+This project was made possible by its sponsors:
+
+Anna Renaudin - www.annarenaudin.net
+Grégoire Rist - www.expeo.net
 */
+
 
 /**
 @namespace
@@ -12,6 +22,22 @@ Dual licensed under the MIT and GPL licenses.
 if(typeof lds == 'undefined') lds = {};
 
 (function (exports) {
+
+	function findClosest(value, offset, mod)	{
+		var mod2 = mod / 2;
+		while(value > offset + mod2) value -= mod;
+		while(value < offset - mod2) value += mod;
+		return value;		
+	}
+
+	function normalize(value, mod)	{
+		value %= mod;
+		while(value < 0) value += mod;
+		return value;		
+	}
+
+
+
     /**
     Execute the specified getter on the specified object-instance and return the result
     @inner
@@ -205,6 +231,18 @@ if(typeof lds == 'undefined') lds = {};
         var coulisse = this;
 
         /**
+        repeat the first image after the last and vice versa
+
+        thanks to
+
+        Anna Renaudin - www.annarenaudin.net
+        Grégoire Rist - www.expeo.net
+
+        @field {Booleam}
+        */
+        var cyclic = options.cyclic || false;
+
+        /**
         duration of the animation
         @field {number}
         */
@@ -300,7 +338,7 @@ if(typeof lds == 'undefined') lds = {};
             */
             var elementClick = function (e) {
                 if (index != panelIndex) {
-                    if (!(onActivateIndex && onActivateIndex({ index: panelIndex }) === false)) {
+                    if (!(onActivateIndex && onActivateIndex({ index: normalize(panelIndex, panels.length) }) === false)) {
                         coulisse.setIndex(panelIndex);
                     }
                     'preventDefault' in e && e.preventDefault();
@@ -337,16 +375,9 @@ if(typeof lds == 'undefined') lds = {};
             (re)draw the panel
             @function
             @param {Object} state
+            @param {number} faceIndex
             */
-            this.drawPanel = function (state) {
-                var result = true;
-
-                
-                if (!loaded) {
-                    return result;
-                }
-
-                var display = true;
+            this.update = function (state, faceIndex) {
                 /*
                 when the faceindex is an integer (0, 1, 3, -1, -5, etc...) the coulisse
                 there are two types of images. The image in the center is the active
@@ -361,7 +392,16 @@ if(typeof lds == 'undefined') lds = {};
                 in the carrousel. realIndex, is not. when the coulisse is moving realIndex
                 is probably not an integer, but when it has stopped it is.
                 */
-                var faceIndex = panelIndex - realIndex;
+
+
+                var result = true;
+
+                
+                if (!loaded) {
+                    return result;
+                }
+
+                var display = true;
                 var zIndex = state.panelCount - Math.abs(Math.round(faceIndex));
 
                 /*
@@ -372,7 +412,7 @@ if(typeof lds == 'undefined') lds = {};
                     if faceIndex is > -1 the image is transforming
                     */
                     if (faceIndex > -1) {
-                        var panel2 = panels[panelIndex + 1];
+                        var panel2 = panels[(panelIndex + 1) % state.panelCount];
                         face.width = panel.inactivePanelWidth + panel.deltaWidth * state.realIndexModInv;
                         face.height = panel.inactivePanelHeight + panel.deltaHeight * state.realIndexModInv;
                         context && pinchRight(context, image, pinch * state.realIndexMod, sliceCount);
@@ -413,7 +453,7 @@ if(typeof lds == 'undefined') lds = {};
                     Find out if the image is transforming.
                     */
                     if (faceIndex < 1) {
-                        var panel2 = panels[panelIndex - 1];
+                        var panel2 = panels[(panelIndex + state.panelCount - 1) % state.panelCount];
                         face.width = panel.inactivePanelWidth + panel.deltaWidth * state.realIndexMod;
                         face.height = panel.inactivePanelHeight + panel.deltaHeight * state.realIndexMod;
                         context && pinchLeft(context, image, pinch * state.realIndexModInv, sliceCount);
@@ -488,7 +528,7 @@ if(typeof lds == 'undefined') lds = {};
                 /*
                 this is false if the image was already hidden
                 */
-                return result;
+                return true;
             };
 
 
@@ -529,26 +569,64 @@ if(typeof lds == 'undefined') lds = {};
 
             if (!panelCount) return;
 
+            var offsetPanelIndex = normalize(realIndex, panelCount);
             var state = {
                 panelLeft: null
                 , panelRight: null
                 , panelCount: panelCount
                 , realIndexInt: parseInt(realIndex)
-                , realIndexMod: realIndex % 1
-                , realIndexModInv: 1 - realIndex % 1
+                , realIndexMod: offsetPanelIndex % 1
+                , realIndexModInv: 1 - offsetPanelIndex % 1
             };
+            var offsetPanelIndex = parseInt(offsetPanelIndex);
 
-            for (var panelIndex = state.realIndexInt; panelIndex >= 0; panelIndex--) {
-                var panel = panels[panelIndex];
-                if (panel) {
-                    if (!panel.drawPanel(state) && !updateAll) break;
-                }
+        
+            if(cyclic)  {
+			    var leftPanelCount = parseInt(panelCount / 2);
+			    var rightPanelCount = panelCount - leftPanelCount;
+			    for(var leftPanelIndex = 0; leftPanelIndex < leftPanelCount; leftPanelIndex++)	{
+				    var panelIndex = offsetPanelIndex;
+				    panelIndex -= leftPanelIndex;
+                    if(!cyclic && panelIndex < 0) break;
+
+				    while(panelCount && panelIndex < 0) panelIndex += panelCount;
+                    var panel = panels[panelIndex];
+                    
+                    var faceIndex = panelIndex - realIndex;
+				    while(faceIndex < 0 - leftPanelCount) faceIndex += panelCount;
+				    while(faceIndex > 0 + rightPanelCount) faceIndex -= panelCount;
+
+                    if (!panel.update(state, faceIndex) && !updateAll) break;
+			    }
+			    for(var rightPanelIndex = 1; rightPanelIndex < rightPanelCount; rightPanelIndex++)	{
+				    var panelIndex = offsetPanelIndex;
+				    panelIndex += rightPanelIndex;
+                    if(!cyclic && panelIndex >= panelCount) break;
+
+				    while(panelIndex >= panelCount) panelIndex -= panelCount;
+                    var panel = panels[panelIndex];
+
+                    var faceIndex = panelIndex - realIndex;
+				    while(faceIndex < 0 - leftPanelCount) faceIndex += panelCount;
+				    while(faceIndex > 0 + rightPanelCount) faceIndex -= panelCount;
+
+                    if (!panel.update(state, faceIndex) && !updateAll) break;
+			    }
             }
+            else   
+            {
+                for (var panelIndex = state.realIndexInt; panelIndex >= 0; panelIndex--) {
+                    var panel = panels[panelIndex];
+                    if (panel) {
+                        if (!panel.update(state, panelIndex - realIndex) && !updateAll) break;
+                    }
+                }
 
-            for (var panelIndex = state.realIndexInt + 1; panelIndex < state.panelCount; panelIndex++) {
-                var panel = panels[panelIndex];
-                if (panel) {
-                    if (!panel.drawPanel(state) && !updateAll) break;
+                for (var panelIndex = state.realIndexInt + 1; panelIndex < state.panelCount; panelIndex++) {
+                    var panel = panels[panelIndex];
+                    if (panel) {
+                        if (!panel.update(state, panelIndex - realIndex) && !updateAll) break;
+                    }
                 }
             }
 
@@ -571,7 +649,7 @@ if(typeof lds == 'undefined') lds = {};
             var newIndex = Math.round(newRealIndex);
             if (index != newIndex) {
                 index = newIndex;
-                onIndexChanging && onIndexChanging({ index: index });
+                onIndexChanging && onIndexChanging({ index: normalize(index, panels.length) });
             }
             if (realIndex != newRealIndex) {
                 realIndex = newRealIndex;
@@ -607,7 +685,7 @@ if(typeof lds == 'undefined') lds = {};
         var startAnimation = function (newRealIndex) {
             var newIndex = Math.round(newRealIndex);
 
-            onIndexChange && onIndexChange({ index: newIndex });
+            onIndexChange && onIndexChange({ index: normalize(newIndex, panels.length) });
 
             animationHandle = setAnimation(
             realIndex
@@ -625,7 +703,7 @@ if(typeof lds == 'undefined') lds = {};
             if (animationHandle) {
                 clearAnimation(animationHandle);
                 animationHandle = null;
-                onIndexChanged && onIndexChanged({ index: index });
+                onIndexChanged && onIndexChanged({ index: normalize(index, panels.length) });
             }
         };
 
@@ -647,7 +725,11 @@ if(typeof lds == 'undefined') lds = {};
         */
         this.setIndex = function (value) {
             stopAnimation();
-            startAnimation(value);
+            startAnimation(
+                cyclic
+                ? findClosest(value, realIndex, panels.length)
+                : normalize(value, panels.length)
+            );
         };
         /**
         get index of the panel
@@ -655,7 +737,7 @@ if(typeof lds == 'undefined') lds = {};
         @returns {number}
         */
         this.getIndex = function () {
-            return index;
+            return normalize(index, panels.length);
         };
 
         /**

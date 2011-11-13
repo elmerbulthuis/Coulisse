@@ -83,7 +83,7 @@
         </script>
     </div>
     <h1>
-        Example with titles and picasa photo's
+        Cyclic example with titles and picasa photo's
     </h1>
     <div id="demo20">
         <h2 id="title20">
@@ -115,6 +115,7 @@
                         $('#coulisseDemo20')
                         .coulisse({
                             index: 0
+                            , cyclic:   true
                             , images: data.feed.entry
                             , imageSrcGetter: ['content', 'src']
                             , linkHrefGetter: ['link', 1, 'href']
@@ -122,6 +123,7 @@
                             , inactiveSize: 200
                             , indexChanging: function (e, arg) {
                                 var entry = data.feed.entry[arg.index];
+if(!entry)alert(arg.index);
                                 setTitles(entry);
                             }
                         });
