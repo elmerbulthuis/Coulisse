@@ -2,7 +2,7 @@
 @fileOverview jQuery-ui wrapper for LuvDaSun Coulisse
 @author <a href="mailto:elmerbulthuis@gmail.com">Elmer Bulthuis</a>
 @version 0.3.1
-@license jQuery-ui wrapper for LuvDaSun Coulisse - v0.3.1 - 2011-11-13
+@license jQuery-ui wrapper for LuvDaSun Coulisse - v0.3.2 - 2011-11-16
 http://coulisse.luvdasun.com/
 
 Copyright 2010-2011 "Elmer Bulthuis" <elmerbulthuis@gmail.com>
@@ -57,6 +57,7 @@ typeof jQuery.ui != 'undefined' &&
                     , onIndexChanged: function (e) { return widget._trigger('indexChanged', null, e); }
                     , animationCalculate: null
                     , cyclic:   options.cyclic
+                    , activateEvent:    options.activateEvent
                 });
 
                 this._coulisse = coulisse;

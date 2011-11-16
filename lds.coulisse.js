@@ -2,7 +2,7 @@
 @fileOverview LuvDaSun Coulisse
 @author <a href="mailto:elmerbulthuis@gmail.com">Elmer Bulthuis</a>
 @version 0.8.2
-@license LuvDaSun Coulisse - v0.8.2 - 2011-11-12
+@license LuvDaSun Coulisse - v0.8.3 - 2011-11-16
 
 http://coulisse.luvdasun.com/
 
@@ -284,7 +284,13 @@ if(typeof lds == 'undefined') lds = {};
         var inactiveSize = options.inactiveSize || 400;
 
         /**
-        event fired when an inactive panel is clicked
+        @field {string}
+        */
+        var activateEvent = options.activateEvent || 'click';
+
+
+        /**
+        event fired when an inactive panel is activated
         @event
         */
         var onActivateIndex = options.onActivateIndex || null;
@@ -336,7 +342,7 @@ if(typeof lds == 'undefined') lds = {};
             @function
             @param {Object} e
             */
-            var elementClick = function (e) {
+            var elementActive = function (e) {
                 if (index != panelIndex) {
                     if (!(onActivateIndex && onActivateIndex({ index: normalize(panelIndex, panels.length) }) === false)) {
                         coulisse.setIndex(panelIndex);
@@ -537,7 +543,7 @@ if(typeof lds == 'undefined') lds = {};
             @function
             */
             this.destruct = function () {
-                unbindEvent(element, 'click', elementClick);
+                unbindEvent(element, activateEvent, elementActive);
                 unbindEvent(image, 'load', imageLoad);
 
                 container.removeChild(element);
@@ -549,7 +555,7 @@ if(typeof lds == 'undefined') lds = {};
 
             //construct
 
-            bindEvent(element, 'click', elementClick);
+            bindEvent(element, activateEvent, elementActive);
             bindEvent(image, 'load', imageLoad);
 
             style.display = 'none';
